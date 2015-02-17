@@ -29,7 +29,7 @@
 
         function setupRenderer(){
             var canvas = doc.createElement('canvas'),
-                gl;
+                gl = false;
 
             gl = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'].some(function(c){ return canvas.getContext(c); });
 

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<script src="common/three.min.js"></script>
+<script>
+    (function(W){
+        var camera, scene, renderer, tri2D, tri3D;
+
+        function init(){
+            var doc = W['document'], docEl = doc.documentElement, docBody = doc.body,
+                contentW, contentH, cw = 'clientWidth', ch = 'clientHeight';
+
+            if( W['innerHeight'] === undefined ){
+                contentW = docEl[cw] || docBody[cw],
+                contentH = docEl[ch] || docBody[ch];
+            }else{
+                contentW = W['innerWidth'],
+                contentH = W['innerHeight'];
+            }
+
+            camera = new THREE.PerspectiveCamera( 75, contentW / contentH, 1, 1000 );
+            camera.position.z = 500;
+
+            scene = new THREE.Scene();
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize( contentW, contentH );
+
+            docBody.appendChild(renderer.domElement);
+        }
+
+        function addTriangle(){
+            var geometry, material, shape;
+
+            material = new THREE.MeshBasicMaterial({color:0x000000, wireframe:true, wireframeLinewidth:2});
+
+            geometry = new THREE.Geometry();
+            geometry.vertices = [
+                new THREE.Vector3( 0,   0,   0 ),
+                new THREE.Vector3( 0, 100,   0 ),
+                new THREE.Vector3( 0,   0, 100 )
+            ];
+            geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
+            geometry.computeBoundingSphere();
+
+            tri2D = new THREE.Mesh( geometry, material );
+            scene.add(tri2D);
+
+            shape = new THREE.Shape([
+                new THREE.Vector2( 0, 50 ),
+                new THREE.Vector2( 50, 50 ),
+                new THREE.Vector2( 50, 0 )
+            ]);
+
+            geometry = new THREE.ExtrudeGeometry( shape, {bevelEnabled:false, amount:30} );
+
+            tri3D = new THREE.Mesh( geometry, material );
+            scene.add(tri3D);
+        }
+
+        function animate(){
+            requestAnimationFrame(animate);
+
+            var now = Date.now();
+
+            tri2D.rotation.x = tri3D.rotation.x = now * 0.0005;
+            tri2D.rotation.y = tri3D.rotation.y = now * 0.001;
+
+            renderer.render( scene, camera );
+        }
+
+        init();
+        addTriangle();
+        animate();
+    })(this);
+</script>
+</body>
+</html>

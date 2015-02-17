@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<script src="common/three.min.js"></script>
+<script src="common/fonts/helvetiker_regular.typeface.js"></script>
+<script src="common/fonts/helvetiker_bold.typeface.js"></script>
+<script>
+    (function(W){
+        var camera, scene, renderer, mesh;
+
+        function init(){
+            var doc = W['document'], docEl = doc.documentElement, docBody = doc.body,
+                contentW, contentH, cw = 'clientWidth', ch = 'clientHeight';
+
+            if( W['innerHeight'] === undefined ){
+                contentW = docEl[cw] || docBody[cw],
+                        contentH = docEl[ch] || docBody[ch];
+            }else{
+                contentW = W['innerWidth'],
+                        contentH = W['innerHeight'];
+            }
+
+            camera = new THREE.PerspectiveCamera( 75, contentW / contentH, 1, 1000 );
+            camera.position.z = 500;
+
+            scene = new THREE.Scene();
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize( contentW, contentH );
+
+            docBody.appendChild(renderer.domElement);
+        }
+
+        function addTriangle(){
+            var geometry, material;
+
+            material = new THREE.MeshBasicMaterial({color:0x000000, wireframe:true, wireframeLinewidth:2});
+
+            geometry = new THREE.TextGeometry( 'HELLO TEXT', {
+                size:30, height:20, font:'helvetiker', weight:'normal', style:'normal', bevelEnabled:false
+            } );
+
+            mesh = new THREE.Mesh( geometry, material );
+
+            scene.add(mesh);
+        }
+
+        function animate(){
+            requestAnimationFrame(animate);
+
+            var now = Date.now();
+
+            mesh.rotation.x = now * 0.0005;
+            mesh.rotation.y = now * 0.001;
+
+            renderer.render( scene, camera );
+        }
+
+        init();
+        addTriangle();
+        animate();
+    })(this);
+</script>
+</body>
+</html>

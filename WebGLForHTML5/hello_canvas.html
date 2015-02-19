@@ -28,10 +28,9 @@
         }
 
         function setupRenderer(){
-            var canvas = doc.createElement('canvas'),
-                gl = false;
+            var canvas = doc.createElement('canvas'), gl;
 
-            gl = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'].some(function(c){ return canvas.getContext(c); });
+            ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'].some(function(c){ return gl = canvas.getContext(c); });
 
             renderer = ( gl ) ? new THREE.WebGLRenderer() : new THREE.CanvasRenderer();
 
@@ -39,7 +38,7 @@
             renderer.setClearColor( 0x777777, 1.0 );
             doc.body.appendChild(renderer.domElement);
 
-            canvas = undefined;
+            canvas = undefined, gl = undefined;
         }
 
         function setupScene(){

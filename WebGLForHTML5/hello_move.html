@@ -1,10 +1,127 @@
 <!DOCTYPE html>
 <html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title></title>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+    <script src="common/three.min.js"></script>
 </head>
 <body>
+<script>
+    (function(W){
+        var CANVAS_WIDTH = 400, CANVAS_HEIGHT = 300,
+            doc = W['document'], angle = 0,
+            mesh, geometry, vertices,
+            renderer, scene, camera;
 
+        function initWebGL(){
+            setupRenderer();
+            setupScene();
+            setupCamera();
+
+            (function loop(){
+                updateGeometry();
+                renderer.render( scene, camera );
+                requestAnimationFrame(loop);
+            })();
+        }
+
+        function setupRenderer(){
+            var canvas = doc.createElement('canvas'), gl;
+
+            ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'].some(function(c){ return gl = canvas.getContext(c); });
+
+            renderer = ( gl ) ? new THREE.WebGLRenderer() : new THREE.CanvasRenderer();
+
+            renderer.setSize( CANVAS_WIDTH, CANVAS_HEIGHT );
+            renderer.setClearColor( 0x777777, 1.0 );
+            doc.body.appendChild(renderer.domElement);
+
+            canvas = undefined, gl = undefined;
+        }
+
+        function setupScene(){
+            scene = new THREE.Scene();
+            addMesh();
+        }
+
+        function setupCamera(){
+            camera = new THREE.PerspectiveCamera( 45, CANVAS_WIDTH / CANVAS_HEIGHT,.1, 10000 );
+            camera.position.set( 0, 0, -3.0 );
+            camera.lookAt(scene.position);
+            scene.add(camera);
+        }
+
+        function addMesh(){
+            var verticeColors = [
+                    // left triangle
+                    1.0, 0.0, 0.0,
+                    1.0, 1.0, 1.0,
+                    1.0, 0.0, 0.0,
+                    // right triangle
+                    0.0, 0.0, 1.0,
+                    0.0, 0.0, 1.0,
+                    1.0, 1.0, 1.0
+                ],
+                colors = [], f = 0, i, l;
+
+            vertices = [
+                    // left triangle
+                    -0.5,  0.5, 0.0,
+                    0.0,  0.0, 0.0,
+                    -0.5, -0.5, 0.0,
+                    // right triangle
+                    0.5,  0.5, 0.0,
+                    0.0,  0.0, 0.0,
+                    0.5, -0.5, 0.0
+                ];
+
+            geometry = new THREE.Geometry();
+            geometry.dynamic = true;
+
+            i = 0, l = vertices.length;
+
+            for( ; i < l; i += 3 ){
+                geometry.vertices.push( new THREE.Vector3( vertices[i], vertices[i + 1], vertices[i + 2] ) );
+                colors.push( new THREE.Color().setRGB( verticeColors[i], verticeColors[i + 1], verticeColors[i + 2] ) );
+            }
+
+            geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
+            geometry.faces.push( new THREE.Face3( 3, 5, 4 ) );
+
+            i = 0, l = colors.length;
+
+            for( ; i < l; i += 3 ){
+                geometry.faces[f].vertexColors.push(colors[i]);
+                geometry.faces[f].vertexColors.push(colors[i + 1]);
+                geometry.faces[f].vertexColors.push(colors[i + 2]);
+                ++f;
+            }
+
+            mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial({vertexColors:THREE.VertexColors}) );
+
+            scene.add(mesh);
+        }
+
+        function updateGeometry(){
+            var x_translation = Math.sin(angle) / 2.0,
+                i = 0, l = geometry.vertices.length;
+
+            for( ; i < l; i++ ) geometry.vertices[i].x = vertices[i * 3] + x_translation;
+
+            angle += 0.01;
+
+            geometry.verticesNeedUpdate = true;
+        }
+
+        initWebGL();
+    })(this);
+</script>
 </body>
 </html>

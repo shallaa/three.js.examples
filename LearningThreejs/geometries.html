@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+    <script src="common/three.js"></script>
+    <script src="common/ConvexGeometry.js"></script>
+    <script src="common/ParametricGeometries.js"></script>
+    <script src="common/stats.js"></script>
+    <script>
+        (function(W){
+            var doc = W['document'], screenW = 0, screenH = 0, docEl, docBody,
+                    scene = new THREE.Scene(),
+                    renderer = new THREE.WebGLRenderer(),
+                    planeGeoMetry = new THREE.PlaneBufferGeometry( 60, 40, 1, 1),
+                    plane = new THREE.Mesh( planeGeoMetry, new THREE.MeshLambertMaterial({color:0xFFFFFF}) ),
+                    camera, stats, t0;
+
+            function init(){
+                var ambientLight = new THREE.AmbientLight(0x090909),
+                        spotLight = new THREE.SpotLight(0xFFFFFF);
+
+                docEl = doc.documentElement, docBody = doc.body;
+
+                screenW = W['innerWidth']  || docEl['clientWidth']  || docBody['clientWidth'],
+                        screenH = W['innerHeight'] || docEl['clientHeight'] || docBody['clientHeight'];
+
+                renderer.setClearColor( new THREE.Color(0xEEEEEE), 1.0 );
+                renderer.setSize( screenW, screenH );
+                renderer.shadowMapEnabled = true;
+
+                scene.add( new THREE.AxisHelper(20) );
+
+                plane.rotation.x = -0.5 * Math.PI;
+                plane.position.x = 0;
+                plane.position.y = 0;
+                plane.position.z = 0;
+                plane.receiveShadow = true;
+                scene.add(plane);
+
+                camera = new THREE.PerspectiveCamera( 45, screenW / screenH, 0.1, 1000);
+                camera.position.x = -50;
+                camera.position.y = 30;
+                camera.position.z = 20;
+                camera.lookAt( new THREE.Vector3( -10, 0, 0 ) );
+
+                scene.add(ambientLight);
+
+                spotLight.position.set( -40, 40, 50 );
+                spotLight.castShadow = true;
+                scene.add(spotLight);
+
+                docBody.appendChild(renderer.domElement);
+
+                addGeometries();
+                initStats();
+                renderScene();
+            }
+
+            function addGeometries(){
+                var points = [
+                        new THREE.Vector3(  2,  2,  2 ),
+                        new THREE.Vector3(  2,  2, -2 ),
+                        new THREE.Vector3( -2,  2, -2 ),
+                        new THREE.Vector3( -2,  2,  2 ),
+                        new THREE.Vector3(  2, -2,  2 ),
+                        new THREE.Vector3(  2, -2, -2 ),
+                        new THREE.Vector3( -2, -2, -2 ),
+                        new THREE.Vector3( -2, -2,  2 )
+                    ],
+                    materials = [
+                        new THREE.MeshLambertMaterial({shading:THREE.FlatShading}),
+                        new THREE.MeshBasicMaterial({color:0x000000, wireframe:true})
+                    ],
+                    geoms, mesh,
+                    pts = [], detail = .1, radius = 3,
+                    angle = 0.0, i = 0, j = 0, l;
+
+                for( ; angle < Math.PI; angle += detail )
+                    pts.push( new THREE.Vector3( Math.cos(angle) * radius, 0, Math.sin(angle) * radius ) );
+
+                geoms = [
+                    new THREE.CylinderGeometry( 1, 4, 4 ),
+                    new THREE.BoxGeometry( 2, 2, 2),
+                    new THREE.SphereGeometry(2),
+                    new THREE.IcosahedronGeometry(4),
+                    new THREE.ConvexGeometry(points),
+                    new THREE.LatheGeometry( pts, 12 ),
+                    new THREE.OctahedronGeometry(3),
+                    new THREE.ParametricGeometry( THREE.ParametricGeometries.mobius3d, 20, 10 ),
+                    new THREE.TetrahedronGeometry(3),
+                    new THREE.TorusGeometry( 3, 1, 10, 10 ),
+                    new THREE.TorusKnotGeometry( 3, 0.5, 50, 20 )
+                ];
+
+                l = geoms.length;
+
+                for( ; i < l; i++ ){
+                    materials[0] = materials[0].clone();
+                    materials[0].color.setHex( Math.random() * 0xFFFFFF );
+
+                    mesh = THREE.SceneUtils.createMultiMaterialObject( geoms[i], materials );
+                    mesh.traverse(function(e){ e.castShadow = true; });
+                    mesh.position.x = -24 + ( ( i % 4 ) * 12 );
+                    mesh.position.y = 4;
+                    mesh.position.z = -8 + ( j * 12 );
+
+                    if( ( i + 1 ) % 4 == 0 ) j++;
+                    scene.add(mesh);
+                }
+            }
+
+            function renderScene(){
+                var sw = W['innerWidth']  || docEl['clientWidth']  || docBody['clientWidth'],
+                    sh = W['innerHeight'] || docEl['clientHeight'] || docBody['clientHeight'];
+
+                if( screenW != sw || screenH != sh ){
+                    camera.aspect = sw / sh;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize( sw, sh );
+                    screenW = sw, screenH = sh;
+                }
+
+                stats.update();
+
+                requestAnimationFrame(renderScene);
+                renderer.render( scene, camera );
+            }
+
+            function initStats(){
+                stats = new Stats();
+                stats.setMode(0);
+
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.left = '0px';
+                stats.domElement.style.top = '0px';
+
+                docBody.appendChild(stats.domElement);
+            }
+
+            t0 = setInterval( function(){
+                switch( doc.readyState ){
+                    case'complete':case'loaded':break;
+                    case'interactive':if( doc.documentElement.doScroll ) try{doc.documentElement.doScroll('left');}catch(e){return;}
+                    default:return;
+                }
+                clearInterval(t0);
+                init();
+            }, 1 );
+        })(this);
+    </script>
+</head>
+<body>
+</body>
+</html>

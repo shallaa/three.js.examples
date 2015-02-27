@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+    <script src="common/three.js"></script>
+    <script src="common/ConvexGeometry.js"></script>
+    <script src="common/ParametricGeometries.js"></script>
+    <script src="common/stats.js"></script>
+    <script src="common/dat.gui.js"></script>
+    <script>
+        (function(W){
+            var doc = W['document'], screenW, screenH, docEl, docBody,
+                scene = new THREE.Scene(),
+                renderer = new THREE.WebGLRenderer(),
+                plane = new THREE.Mesh(
+                    new THREE.PlaneBufferGeometry( 60, 40, 1, 1),
+                    new THREE.MeshLambertMaterial({color:0xFFFFFF})
+                ),
+                controlPoints, camera, mesh, stats, t0;
+
+            function init(){
+                var spotLight = new THREE.SpotLight(0xFFFFFF),
+                    vertices = [
+                        new THREE.Vector3(1,3,1),
+                        new THREE.Vector3(1,3,-1),
+                        new THREE.Vector3(1,-1,1),
+                        new THREE.Vector3(1,-1,-1),
+                        new THREE.Vector3(-1,3,-1),
+                        new THREE.Vector3(-1,3,1),
+                        new THREE.Vector3(-1,-1,-1),
+                        new THREE.Vector3(-1,-1,1)
+                    ],
+                    faces = [
+                        new THREE.Face3(0,2,1),
+                        new THREE.Face3(2,3,1),
+                        new THREE.Face3(4,6,5),
+                        new THREE.Face3(6,7,5),
+                        new THREE.Face3(4,5,1),
+                        new THREE.Face3(5,0,1),
+                        new THREE.Face3(7,6,2),
+                        new THREE.Face3(6,3,2),
+                        new THREE.Face3(5,7,0),
+                        new THREE.Face3(7,2,0),
+                        new THREE.Face3(1,3,4),
+                        new THREE.Face3(3,6,4)
+                    ],
+                    geom = new THREE.Geometry(),
+                    materials = [
+                        new THREE.MeshLambertMaterial({opacity:0.6, color:0x44FF44, transparent:true}),
+                        new THREE.MeshBasicMaterial({color:0x000000, wireframe:true})
+                    ],
+                    gui = new dat.GUI(),
+                    i = 0, point, f;
+
+                docEl = doc.documentElement, docBody = doc.body;
+
+                screenW = W['innerWidth']  || docEl['clientWidth']  || docBody['clientWidth'],
+                screenH = W['innerHeight'] || docEl['clientHeight'] || docBody['clientHeight'];
+
+                renderer.setClearColor( new THREE.Color(0xEEEEEE), 1.0 );
+                renderer.setSize( screenW, screenH );
+                renderer.shadowMapEnabled = true;
+
+                scene.add( new THREE.AxisHelper(20) );
+
+                plane.rotation.x = -0.5 * Math.PI;
+                plane.position.x = 0;
+                plane.position.y = 0;
+                plane.position.z = 0;
+                plane.receiveShadow = true;
+                scene.add(plane);
+
+                camera = new THREE.PerspectiveCamera( 45, screenW / screenH, 0.1, 1000);
+                camera.position.x = -20;
+                camera.position.y = 25;
+                camera.position.z = 20;
+                camera.lookAt( new THREE.Vector3( 5, 0, 0 ) );
+
+                spotLight.position.set( -40, 60, 10 );
+                spotLight.castShadow = true;
+                scene.add(spotLight);
+
+                controlPoints = [
+                    addControl(3,5,3),
+                    addControl(3,5,0),
+                    addControl(3,0,3),
+                    addControl(3,0,0),
+                    addControl(0,5,0),
+                    addControl(0,5,3),
+                    addControl(0,0,0),
+                    addControl(0,0,3)
+                ];
+
+                geom.vertices = vertices;
+                geom.faces = faces;
+                geom.computeFaceNormals();
+
+                mesh = THREE.SceneUtils.createMultiMaterialObject( geom, materials);
+                mesh.children.forEach( function(e){e.castShadow = true; } );
+                scene.add(mesh);
+
+                gui.add( new function(){
+                    this.clone = function(){
+                        var geometry = mesh.children[0].geometry.clone(),
+                            materials = [
+                                new THREE.MeshLambertMaterial({opacity:0.6, color:0xFF44FF, transparent:true}),
+                                new THREE.MeshBasicMaterial({color:0x000000, wireframe:true})
+                            ],
+                            mesh2 = THREE.SceneUtils.createMultiMaterialObject( geometry, materials );
+
+                        mesh2.children.forEach( function(e){e.castShadow = true; } );
+                        mesh2.translateX(5);
+                        mesh2.translateZ(5);
+                        mesh2.name = 'clone';
+
+                        scene.remove( scene.getObjectByName('clone') );
+                        scene.add(mesh2);
+                    };
+                }, 'clone' );
+
+                for( ; i < 8; i++ ){
+                    point = controlPoints[i];
+
+                    f = gui.addFolder( 'Vertices ' + ( i + 1 ) );
+                    f.add( point, 'x', -10, 10 );
+                    f.add( point, 'y', -10, 10 );
+                    f.add( point, 'z', -10, 10 );
+                }
+
+                docBody.appendChild(renderer.domElement);
+
+                initStats();
+                renderScene();
+            }
+
+            function renderScene(){
+                var sw = W['innerWidth']  || docEl['clientWidth']  || docBody['clientWidth'],
+                    sh = W['innerHeight'] || docEl['clientHeight'] || docBody['clientHeight'],
+                    vertices = [], i = 0, point;
+
+                if( screenW != sw || screenH != sh ){
+                    camera.aspect = sw / sh;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize( sw, sh );
+                    screenW = sw, screenH = sh;
+                }
+
+                stats.update();
+
+                for( ; i < 8; i++ ){
+                    point = controlPoints[i];
+                    vertices.push( new THREE.Vector3( point.x, point.y, point.z ) );
+                }
+
+                mesh.children.forEach( function(e){
+                    e.geometry.vertices = vertices;
+                    e.geometry.verticesNeedUpdate = true;
+                    e.geometry.computeFaceNormals();
+                } );
+
+                requestAnimationFrame(renderScene);
+                renderer.render( scene, camera );
+            }
+
+            function initStats(){
+                stats = new Stats();
+                stats.setMode(0);
+
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.left = '0px';
+                stats.domElement.style.top = '0px';
+
+                docBody.appendChild(stats.domElement);
+            }
+
+            function addControl( x, y, z ){
+                return new function(){
+                    this.x = x;
+                    this.y = y;
+                    this.z = z;
+                };
+            }
+
+            t0 = setInterval( function(){
+                switch( doc.readyState ){
+                    case'complete':case'loaded':break;
+                    case'interactive':if( doc.documentElement.doScroll ) try{doc.documentElement.doScroll('left');}catch(e){return;}
+                    default:return;
+                }
+                clearInterval(t0);
+                init();
+            }, 1 );
+        })(this);
+    </script>
+</head>
+<body>
+</body>
+</html>

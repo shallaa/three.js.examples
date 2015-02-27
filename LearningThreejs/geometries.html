@@ -20,8 +20,7 @@
             var doc = W['document'], screenW = 0, screenH = 0, docEl, docBody,
                     scene = new THREE.Scene(),
                     renderer = new THREE.WebGLRenderer(),
-                    planeGeoMetry = new THREE.PlaneBufferGeometry( 60, 40, 1, 1),
-                    plane = new THREE.Mesh( planeGeoMetry, new THREE.MeshLambertMaterial({color:0xFFFFFF}) ),
+                    plane = new THREE.Mesh( new THREE.PlaneBufferGeometry( 60, 40, 1, 1), new THREE.MeshLambertMaterial({color:0xFFFFFF}) ),
                     camera, stats, t0;
 
             function init(){

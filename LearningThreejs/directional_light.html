@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+    <script src="common/three.js"></script>
+    <script src="common/stats.js"></script>
+    <script src="common/dat.gui.js"></script>
+    <script>
+        (function(W){
+            'use strict';
+            var doc = W['document'], screenW, screenH, docEl, docBody,
+                scene, renderer, camera,
+                stats, controls, t0, ambiColor = '#1C1C1C', pointColor = '#FF5808', step = 0, invert = 1, phase = 0,
+                plane, cube, sphere, sphereLight,
+                ambientLight, directionalLight;
+
+            function init(){
+                docEl = doc.documentElement, docBody = doc.body;
+
+                screenW = W['innerWidth']  || docEl['clientWidth']  || docBody['clientWidth'];
+                screenH = W['innerHeight'] || docEl['clientHeight'] || docBody['clientHeight'];
+
+                setupRenderer();
+                setupScene();
+                setupCamera();
+
+                setupGUI();
+                setupStats();
+
+                renderScene();
+            }
+
+            function setupRenderer(){
+                var canvas = doc.createElement('canvas'), gl;
+
+                ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'].some(function(k){ return gl = canvas.getContext(k); });
+
+                renderer = ( gl ) ? new THREE.WebGLRenderer() : new THREE.CanvasRenderer();
+
+                renderer.setClearColor( new THREE.Color(0xEEEEEE), 1.0 );
+                renderer.setSize( screenW, screenH );
+                renderer.shadowMapEnabled = true;
+
+                docBody.appendChild(renderer.domElement);
+
+                canvas = undefined, gl = undefined;
+            }
+
+            function setupScene(){
+                scene = new THREE.Scene();
+                scene.add( new THREE.AxisHelper(20) );
+
+                addMesh();
+                addLight();
+            }
+
+            function setupCamera(){
+                camera = new THREE.PerspectiveCamera( 45, screenW / screenH, 0.1, 1000);
+                camera.position.set( -35, 30, 25 );
+                camera.lookAt( new THREE.Vector3( 10, 0, 0 ) );
+            }
+
+            function setupGUI(){
+                var gui = new dat.GUI();
+
+                controls = new function(){
+                    this.rotationSpeed = 0.03;
+                    this.bouncingSpeed = 0.03;
+                    this.ambientColor = ambiColor;
+                    this.pointColor = pointColor;
+                    this.intensity = 1;
+                    this.distance = 0;
+                    this.exponent = 30;
+                    this.angle = 0.1;
+                    this.debug = false;
+                    this.castShadow = true;
+                    this.onlyShadow = false;
+                    this.target = 'Plane';
+                };
+
+                gui.addColor( controls, 'ambientColor').onChange( function(e){
+                    ambientLight.color = new THREE.Color(e);
+                } );
+
+                gui.addColor( controls, 'pointColor').onChange( function(e){
+                    directionalLight.color = new THREE.Color(e);
+                } );
+
+                gui.add( controls, 'angle', Math.PI * 2 ).onChange( function(e){
+                    directionalLight.angle = e;
+                } );
+
+                gui.add( controls, 'intensity', 0, 5 ).onChange( function(e){
+                    directionalLight.intensity = e;
+                } );
+
+                gui.add( controls, 'distance', 0, 200 ).onChange( function(e){
+                    directionalLight.distance = e;
+                } );
+
+                gui.add( controls, 'exponent', 0, 100 ).onChange( function(e){
+                    directionalLight.exponent = e;
+                } );
+
+                gui.add( controls, 'debug' ).onChange( function(e){
+                    directionalLight.shadowCameraVisible = e;
+                } );
+
+                gui.add( controls, 'castShadow' ).onChange( function(e){
+                    directionalLight.castShadow = e;
+                } );
+
+                gui.add( controls, 'onlyShadow' ).onChange( function(e){
+                    directionalLight.onlyShadow = e;
+                } );
+
+                gui.add( controls, 'target', ['Plane', 'Sphere', 'Cube'] ).onChange( function(e){
+                    switch(e){
+                        case 'Plane':
+                            directionalLight.target = plane;
+                            break;
+                        case 'Sphere':
+                            directionalLight.target = sphere;
+                            break;
+                        case 'Cube':
+                            directionalLight.target = cube;
+                            break;
+                    }
+                } );
+            }
+
+            function addMesh(){
+                plane = new THREE.Mesh( new THREE.PlaneBufferGeometry( 600, 200, 20, 20 ), new THREE.MeshLambertMaterial({color:0xFFFFFF}) );
+
+                plane.rotation.x = -0.5 * Math.PI;
+                plane.position.set( 15, -5, 0 );
+                plane.receiveShadow = true;
+                scene.add(plane);
+
+                cube = new THREE.Mesh( new THREE.BoxGeometry( 4, 4, 4 ), new THREE.MeshLambertMaterial({color:0xFF3333}) );
+                cube.position.set( -4, 3, 0 );
+                cube.castShadow = true;
+                scene.add(cube);
+
+                sphere = new THREE.Mesh( new THREE.SphereGeometry( 4, 20, 20 ), new THREE.MeshLambertMaterial({color:0x7777FF}));
+                sphere.position.set( 20, 0, 2 );
+                sphere.castShadow = true;
+                scene.add(sphere);
+
+                sphereLight = new THREE.Mesh( new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({color:0xAC6C25}));
+                sphereLight.position.set( 3, 20, 3 );
+                sphereLight.castShadow = true;
+                scene.add(sphereLight);
+            }
+
+            function addLight(){
+                ambientLight = new THREE.AmbientLight(ambiColor);
+                scene.add(ambientLight);
+
+                directionalLight = new THREE.DirectionalLight(pointColor);
+                directionalLight.position.set( -40, 60, -10 );
+                directionalLight.castShadow = true;
+                directionalLight.shadowCameraNear = 2;
+                directionalLight.shadowCameraFar = 200;
+                directionalLight.shadowCameraLeft = -50;
+                directionalLight.shadowCameraRight = 50;
+                directionalLight.shadowCameraTop = 50;
+                directionalLight.shadowCameraBottom = -50;
+
+                directionalLight.distance = 0;
+                directionalLight.intensity = 0.5;
+                directionalLight.shadowMapHeight = 1024;
+                directionalLight.shadowMapWidth = 1024;
+                scene.add(directionalLight);
+            }
+
+            function renderScene(){
+                var sw = W['innerWidth']  || docEl['clientWidth']  || docBody['clientWidth'],
+                    sh = W['innerHeight'] || docEl['clientHeight'] || docBody['clientHeight'],
+                    rotationSpeed = controls.rotationSpeed;
+
+                if( screenW != sw || screenH != sh ){
+                    camera.aspect = sw / sh;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize( sw, sh );
+                    screenW = sw, screenH = sh;
+                }
+
+                stats.update();
+
+                step += controls.bouncingSpeed;
+
+                cube.rotation.x += rotationSpeed;
+                cube.rotation.y += rotationSpeed;
+                cube.rotation.z += rotationSpeed;
+
+                sphere.position.set( 20 + ( 10 * Math.cos(step) ), 2 + ( 10 * Math.abs( Math.sin(step) ) ), sphere.position.z );
+
+                sphereLight.position.set( 10 + ( 26 * Math.cos( step / 3 ) ), +( 27 * Math.sin( step / 3 ) ), -8 );
+
+                directionalLight.position.copy(sphereLight.position);
+
+                renderer.render( scene, camera );
+                requestAnimationFrame(renderScene);
+            }
+
+            function setupStats(){
+                stats = new Stats();
+                stats.setMode(0);
+
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.left = '0px';
+                stats.domElement.style.top = '0px';
+
+                docBody.appendChild(stats.domElement);
+            }
+
+            t0 = setInterval( function(){
+                switch( doc.readyState ){
+                    case'complete':case'loaded':break;
+                    case'interactive':if( doc.documentElement.doScroll ) try{doc.documentElement.doScroll('left');}catch(e){return;}
+                    default:return;
+                }
+                clearInterval(t0);
+                init();
+            }, 1 );
+        })(this);
+    </script>
+</head>
+<body>
+</body>
+</html>

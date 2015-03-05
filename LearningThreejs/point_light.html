@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+    <script src="common/three.js"></script>
+    <script src="common/stats.js"></script>
+    <script src="common/dat.gui.js"></script>
+    <script>
+        (function(W){
+            var doc = W['document'], screenW, screenH, docEl, docBody,
+                scene, renderer, camera,
+                stats, controls, t0, ambiColor = '#0C0C0C', pointColor = '#CCFFCC', step = 0, invert = 0, phase = 0,
+                cube = new THREE.Mesh( new THREE.BoxGeometry( 4, 4, 4 ), new THREE.MeshLambertMaterial({color:0xFF7777}) ),
+                sphere = new THREE.Mesh( new THREE.SphereGeometry( 4, 20, 20 ), new THREE.MeshLambertMaterial({color:0x7777FF})),
+                sphereLight = new THREE.Mesh( new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({color:0xAC6C25})),
+                ambientLight = new THREE.AmbientLight(ambiColor), pointLight = new THREE.PointLight(pointColor), spotLight = new THREE.SpotLight(0xFFFFFF);
+
+            function init(){
+                docEl = doc.documentElement, docBody = doc.body;
+
+                screenW = W['innerWidth']  || docEl['clientWidth']  || docBody['clientWidth'];
+                screenH = W['innerHeight'] || docEl['clientHeight'] || docBody['clientHeight'];
+
+                setupRenderer();
+                setupScene();
+                setupCamera();
+
+                setupGUI();
+                setupStats();
+
+                renderScene();
+            }
+
+            function setupRenderer(){
+                var canvas = doc.createElement('canvas'), gl;
+
+                ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'].some(function(k){ return gl = canvas.getContext(k); });
+
+                renderer = ( gl ) ? new THREE.WebGLRenderer() : new THREE.CanvasRenderer();
+
+                renderer.setClearColor( new THREE.Color(0xEEEEEE), 1.0 );
+                renderer.setSize( screenW, screenH );
+
+                docBody.appendChild(renderer.domElement);
+
+                canvas = undefined, gl = undefined;
+            }
+
+            function setupScene(){
+                scene = new THREE.Scene();
+                scene.add( new THREE.AxisHelper(20) );
+
+                addMesh();
+                addLight();
+            }
+
+            function setupCamera(){
+                camera = new THREE.PerspectiveCamera( 45, screenW / screenH, 0.1, 1000);
+                camera.position.set( -25, 30, 25 );
+                camera.lookAt( new THREE.Vector3( 10, 0, 0 ) );
+            }
+
+            function setupGUI(){
+                var gui = new dat.GUI();
+
+                controls = new function(){
+                    this.rotationSpeed = 0.02;
+                    this.bouncingSpeed = 0.03;
+                    this.ambientColor = ambiColor;
+                    this.pointColor = pointColor;
+                    this.spotLight = true;
+                    this.intensity = 1;
+                    this.distance = 100;
+                };
+
+                gui.addColor( controls, 'ambientColor').onChange( function(e){
+                    ambientLight.color = new THREE.Color(e);
+                } );
+                gui.addColor( controls, 'pointColor').onChange( function(e){
+                    pointLight.color = new THREE.Color(e);
+                } );
+                gui.add( controls, 'spotLight').onChange( function(e){
+                    if(e) scene.add(spotLight);
+                    else scene.remove(spotLight);
+                } );
+                gui.add( controls, 'intensity', 0, 3).onChange( function(e){
+                    pointLight.intensity = e;
+                } );
+                gui.add( controls, 'distance', 0, 100).onChange( function(e){
+                    pointLight.distance = e;
+                } );
+            }
+
+            function addMesh(){
+                var plane = new THREE.Mesh( new THREE.PlaneBufferGeometry( 60, 20, 20, 20 ), new THREE.MeshLambertMaterial({color:0xFFFFFF}) );
+
+                plane.rotation.x = -0.5 * Math.PI;
+                plane.position.set( 15, 0, 0 );
+                plane.receiveShadow = true;
+                scene.add(plane);
+
+                cube.position.set( -4, 3, 0 );
+                cube.castShadow = true;
+                scene.add(cube);
+
+                sphere.position.set( 20, 0, 2 );
+                sphere.castShadow = true;
+                scene.add(sphere);
+
+                sphereLight.position.set( 3, 0, 3 );
+                sphereLight.castShadow = true;
+                scene.add(sphereLight);
+            }
+
+            function addLight(){
+                scene.add(ambientLight);
+
+                spotLight.position.set( -40, 60, -10 );
+                spotLight.castShadow = true;
+                scene.add(spotLight);
+
+                pointLight.distance = 100;
+                scene.add(pointLight);
+            }
+
+            function renderScene(){
+                var sw = W['innerWidth']  || docEl['clientWidth']  || docBody['clientWidth'],
+                    sh = W['innerHeight'] || docEl['clientHeight'] || docBody['clientHeight'],
+                    rotationSpeed = controls.rotationSpeed;
+
+                if( screenW != sw || screenH != sh ){
+                    camera.aspect = sw / sh;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize( sw, sh );
+                    screenW = sw, screenH = sh;
+                }
+
+                stats.update();
+
+                step += controls.bouncingSpeed;
+
+                cube.rotation.x += rotationSpeed;
+                cube.rotation.y += rotationSpeed;
+                cube.rotation.z += rotationSpeed;
+
+                sphere.position.set( 20 + ( 10 * Math.cos(step) ), 2 + ( 10 * Math.abs( Math.sin(step) ) ), sphere.position.z );
+
+                if( phase > 2 * Math.PI ){
+                    invert = invert * -1;
+                    phase -= 2 * Math.PI;
+                }else{
+                    phase += rotationSpeed;
+                }
+
+                sphereLight.position.set( +( 14 * Math.cos(phase) ), 5, +( 7 * Math.sin(phase) ) );
+
+                if( invert < 0 ) sphereLight.position.x = ( invert * ( sphereLight.position.x - pivot ) ) + pivot;
+
+                pointLight.position.copy(sphereLight.position);
+
+                renderer.render( scene, camera );
+                requestAnimationFrame(renderScene);
+            }
+
+            function setupStats(){
+                stats = new Stats();
+                stats.setMode(0);
+
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.left = '0px';
+                stats.domElement.style.top = '0px';
+
+                docBody.appendChild(stats.domElement);
+            }
+
+            t0 = setInterval( function(){
+                switch( doc.readyState ){
+                    case'complete':case'loaded':break;
+                    case'interactive':if( doc.documentElement.doScroll ) try{doc.documentElement.doScroll('left');}catch(e){return;}
+                    default:return;
+                }
+                clearInterval(t0);
+                init();
+            }, 1 );
+        })(this);
+    </script>
+</head>
+<body>
+</body>
+</html>

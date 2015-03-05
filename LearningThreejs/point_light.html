@@ -16,6 +16,7 @@
     <script src="common/dat.gui.js"></script>
     <script>
         (function(W){
+            'use strict';
             var doc = W['document'], screenW, screenH, docEl, docBody,
                 scene, renderer, camera,
                 stats, controls, t0, ambiColor = '#0C0C0C', pointColor = '#CCFFCC', step = 0, invert = 0, phase = 0,
@@ -163,7 +164,7 @@
 
                 sphereLight.position.set( +( 14 * Math.cos(phase) ), 5, +( 7 * Math.sin(phase) ) );
 
-                if( invert < 0 ) sphereLight.position.x = ( invert * ( sphereLight.position.x - pivot ) ) + pivot;
+                if( invert < 0 ) sphereLight.position.x = ( invert * ( sphereLight.position.x - 14 ) ) + 14;
 
                 pointLight.position.copy(sphereLight.position);
 

@@ -16,6 +16,7 @@
     <script src="common/dat.gui.js"></script>
     <script>
         (function(W){
+            'use strict';
             var doc = W['document'], screenW, screenH, docEl, docBody,
                 scene, renderer, camera, lookAtMesh,
                 stats, t0, step = 0;
@@ -163,8 +164,8 @@
                     lookAtMesh.position.copy( new THREE.Vector3( x, 10, 0 ) );
                 }
 
-                requestAnimationFrame(renderScene);
                 renderer.render( scene, camera );
+                requestAnimationFrame(renderScene);
             }
 
             function setupStats(){

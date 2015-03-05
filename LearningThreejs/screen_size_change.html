@@ -18,6 +18,7 @@
 <body>
 <script>
     (function(W){
+        'use strict';
         var doc = W['document'], docEl = doc.documentElement, docBody = doc.body,
                 screenW = W['innerWidth']  || docEl['clientWidth']  || docBody['clientWidth'],
                 screenH = W['innerHeight'] || docEl['clientHeight'] || docBody['clientHeight'],
@@ -106,8 +107,8 @@
             sphere.position.x = 20 + ( 10 * Math.cos(step) );
             sphere.position.y = 2 + ( 10 * Math.abs(Math.sin(step)));
 
-            requestAnimationFrame(renderScene);
             renderer.render( scene, camera );
+            requestAnimationFrame(renderScene);
         }
 
         function initStats(){

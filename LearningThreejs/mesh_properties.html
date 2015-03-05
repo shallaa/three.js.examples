@@ -16,6 +16,7 @@
     <script src="common/dat.gui.js"></script>
     <script>
         (function(W){
+            'use strict';
             var doc = W['document'], screenW, screenH, docEl, docBody,
                 scene = new THREE.Scene(),
                 renderer = new THREE.WebGLRenderer(),
@@ -164,8 +165,8 @@
 
                 cube.scale.set( controls.scaleX, controls.scaleY, controls.scaleZ );
 
-                requestAnimationFrame(renderScene);
                 renderer.render( scene, camera );
+                requestAnimationFrame(renderScene);
             }
 
             function initStats(){

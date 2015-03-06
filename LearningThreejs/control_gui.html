@@ -93,16 +93,7 @@
             }
 
             function renderScene(){
-                var sw = W['innerWidth']  || docEl['clientWidth']  || docBody['clientWidth'],
-                    sh = W['innerHeight'] || docEl['clientHeight'] || docBody['clientHeight'],
-                    rotationSpeed = controls.rotationSpeed;
-
-                if( screenW != sw || screenH != sh ){
-                    camera.aspect = sw / sh;
-                    camera.updateProjectionMatrix();
-                    renderer.setSize( sw, sh );
-                    screenW = sw, screenH = sh;
-                }
+                var rotationSpeed = controls.rotationSpeed;
 
                 stats.update();
 

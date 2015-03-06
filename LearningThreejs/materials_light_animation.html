@@ -79,16 +79,6 @@
             }
 
             function renderScene(){
-                var sw = W['innerWidth']  || docEl['clientWidth']  || docBody['clientWidth'],
-                    sh = W['innerHeight'] || docEl['clientHeight'] || docBody['clientHeight'];
-
-                if( screenW != sw || screenH != sh ){
-                    camera.aspect = sw / sh;
-                    camera.updateProjectionMatrix();
-                    renderer.setSize( sw, sh );
-                    screenW = sw, screenH = sh;
-                }
-
                 stats.update();
 
                 cube.rotation.x += 0.02;

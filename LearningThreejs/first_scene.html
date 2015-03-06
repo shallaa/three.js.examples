@@ -61,6 +61,10 @@
                 camera.lookAt(scene.position);
             }
 
+            function renderScene(){
+                renderer.render( scene, camera );
+            }
+
             function addMesh(){
                 plane = new THREE.Mesh( new THREE.PlaneBufferGeometry( 60, 20 ), new THREE.MeshBasicMaterial({color:0xCCCCCC}) );
                 plane.rotation.x = -0.5 * Math.PI;
@@ -74,10 +78,6 @@
                 sphere = new THREE.Mesh( new THREE.SphereGeometry( 4, 20, 20 ), new THREE.MeshBasicMaterial({color:0x7777FF, wireframe:true}) );
                 sphere.position.set( 20, 4, 2 );
                 scene.add(sphere);
-            }
-
-            function renderScene(){
-                renderer.render( scene, camera );
             }
 
             t0 = setInterval( function(){

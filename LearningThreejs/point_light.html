@@ -19,11 +19,10 @@
             'use strict';
             var doc = W['document'], screenW, screenH, docEl, docBody,
                 scene, renderer, camera,
-                stats, controls, t0, ambiColor = '#0C0C0C', pointColor = '#CCFFCC', step = 0, invert = 0, phase = 0,
-                cube = new THREE.Mesh( new THREE.BoxGeometry( 4, 4, 4 ), new THREE.MeshLambertMaterial({color:0xFF7777}) ),
-                sphere = new THREE.Mesh( new THREE.SphereGeometry( 4, 20, 20 ), new THREE.MeshLambertMaterial({color:0x7777FF})),
-                sphereLight = new THREE.Mesh( new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({color:0xAC6C25})),
-                ambientLight = new THREE.AmbientLight(ambiColor), pointLight = new THREE.PointLight(pointColor), spotLight = new THREE.SpotLight(0xFFFFFF);
+                stats, controls, t0,
+                ambiColor = '#0C0C0C', pointColor = '#CCFFCC', step = 0, invert = 0, phase = 0,
+                cube, sphere, sphereLight,
+                ambientLight, pointLight, spotLight;
 
             function init(){
                 docEl = doc.documentElement, docBody = doc.body;
@@ -109,26 +108,32 @@
                 plane.receiveShadow = true;
                 scene.add(plane);
 
+                cube = new THREE.Mesh( new THREE.BoxGeometry( 4, 4, 4 ), new THREE.MeshLambertMaterial({color:0xFF7777}) );
                 cube.position.set( -4, 3, 0 );
                 cube.castShadow = true;
                 scene.add(cube);
 
+                sphere = new THREE.Mesh( new THREE.SphereGeometry( 4, 20, 20 ), new THREE.MeshLambertMaterial({color:0x7777FF}));
                 sphere.position.set( 20, 0, 2 );
                 sphere.castShadow = true;
                 scene.add(sphere);
 
+                sphereLight = new THREE.Mesh( new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({color:0xAC6C25}));
                 sphereLight.position.set( 3, 0, 3 );
                 sphereLight.castShadow = true;
                 scene.add(sphereLight);
             }
 
             function addLight(){
+                ambientLight = new THREE.AmbientLight(ambiColor);
                 scene.add(ambientLight);
 
+                spotLight = new THREE.SpotLight(0xFFFFFF);
                 spotLight.position.set( -40, 60, -10 );
                 spotLight.castShadow = true;
                 scene.add(spotLight);
 
+                pointLight = new THREE.PointLight(pointColor);
                 pointLight.distance = 100;
                 scene.add(pointLight);
             }

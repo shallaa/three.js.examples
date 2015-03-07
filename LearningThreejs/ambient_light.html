@@ -20,10 +20,8 @@
             var doc = W['document'], screenW, screenH, docEl, docBody,
                 scene, renderer, camera,
                 stats, controls, t0, ambiColor = '#0C0C0C', step = 0,
-                cube = new THREE.Mesh( new THREE.BoxGeometry( 4, 4, 4 ), new THREE.MeshLambertMaterial({color:0xFF0000}) ),
-                sphere = new THREE.Mesh( new THREE.SphereGeometry( 4, 20, 20 ), new THREE.MeshLambertMaterial({color:0x7777FF})),
-                ambientLight = new THREE.AmbientLight(ambiColor),
-                spotLight = new THREE.SpotLight(0xFFFFFF);
+                cube,
+                sphere, ambientLight, spotLight;
 
             function init(){
                 docEl = doc.documentElement, docBody = doc.body;
@@ -99,18 +97,22 @@
                 plane.receiveShadow = true;
                 scene.add(plane);
 
+                cube = new THREE.Mesh( new THREE.BoxGeometry( 4, 4, 4 ), new THREE.MeshLambertMaterial({color:0xFF0000}) );
                 cube.position.set( -4, 3, 0 );
                 cube.castShadow = true;
                 scene.add(cube);
 
+                sphere = new THREE.Mesh( new THREE.SphereGeometry( 4, 20, 20 ), new THREE.MeshLambertMaterial({color:0x7777FF}));
                 sphere.position.set( 20, 0, 2 );
                 sphere.castShadow = true;
                 scene.add(sphere);
             }
 
             function addLight(){
+                ambientLight = new THREE.AmbientLight(ambiColor);
                 scene.add(ambientLight);
 
+                spotLight = new THREE.SpotLight(0xFFFFFF);
                 spotLight.position.set( -40, 60, -10 );
                 spotLight.castShadow = true;
                 scene.add(spotLight);
